@@ -106,6 +106,13 @@ class BiModeBP : public BPredUnit
     unsigned choiceThreshold;
     unsigned takenThreshold;
     unsigned notTakenThreshold;
+    // lookup times
+    uint64_t num_prediction=0;
+
+    // prediction wrong countor
+    uint64_t num_wrong_prediction=0;
+
+    void write_acc();
 };
 
 #endif // __CPU_PRED_BI_MODE_PRED_HH__

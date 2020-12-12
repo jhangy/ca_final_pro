@@ -41,6 +41,10 @@
 #ifndef __CPU_PRED_2BIT_LOCAL_PRED_HH__
 #define __CPU_PRED_2BIT_LOCAL_PRED_HH__
 
+#include <fstream>
+#include <iostream>
+#include <istream>
+#include <ostream>
 #include <vector>
 
 #include "base/sat_counter.hh"
@@ -56,7 +60,14 @@
  * determined solely by the branch being taken or not taken.
  */
 class LocalBP : public BPredUnit
-{
+{ 
+  uint32_t size_branch_record = 4;
+  uint32_t size_global_his_record = 4;
+  uint32_t size_global_his = 4;
+  int32_t weight_threshold_max = 159;
+  int32_t weight_threshold_min = -159;
+  int length_global_his = 4;
+  
   public:
     /**
      * Default branch predictor constructor.
@@ -72,7 +83,7 @@ class LocalBP : public BPredUnit
      * @param bp_history Pointer to any bp history state.
      * @return Whether or not the branch is taken.
      */
-    bool lookup(ThreadID tid, Addr branch_addr, void * &bp_history);
+    bool lookup(ThreadID tid, Addr instPC, void * &bp_history);
 
     /**
      * Updates the branch predictor to Not Taken if a BTB entry is
@@ -101,7 +112,7 @@ class LocalBP : public BPredUnit
      *  @param count The value of the counter.
      *  @return The prediction based on the counter value.
      */
-    inline bool getPrediction(uint8_t &count);
+    inline bool getPrediction(uint64_t cur_branch_addr, std::vector<uint64_t> &GA, std::vector<bool> &GHR);
 
     /** Calculates the local index based on the PC. */
     inline unsigned getLocalIndex(Addr &PC);
@@ -120,6 +131,38 @@ class LocalBP : public BPredUnit
 
     /** Mask to get index bits. */
     const unsigned indexMask;
+
+    //
+    
+
+    // store the branch outcome history
+    std::vector<bool> GHR_reserve;
+    std::vector<bool> branch_history_buf;
+    std::vector<bool> history_done;
+    // store the address of branch outcome history
+    std::vector<uint64_t> GA_reserve;
+    std::vector<uint64_t> address_branch_history_buf;
+    /**W vector**/
+    uint32_t size_1d = 0;
+    uint32_t size_2d = 0;
+    uint32_t size_3d = 0;
+
+    std::vector<std::vector<std::vector<int32_t>>> W;
+
+    /**initialize W**/
+    void initialize_W(uint32_t d1st, uint32_t d2nd, uint32_t d3rd);
+
+    // lookup times
+    uint64_t num_prediction=0;
+
+    // prediction wrong countor
+    uint64_t num_wrong_prediction=0;
+
+    //write history to debug
+    void write_log();
+    void write_acc();
+    void show_W();
+    void show_buf();
 };
 
 #endif // __CPU_PRED_2BIT_LOCAL_PRED_HH__

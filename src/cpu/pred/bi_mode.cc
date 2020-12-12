@@ -35,6 +35,11 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 
+#include <fstream>
+#include <iostream>
+#include <istream>
+#include <ostream>
+
 BiModeBP::BiModeBP(const BiModeBPParams *params)
     : BPredUnit(params),
       globalHistoryReg(params->numThreads, 0),
@@ -99,7 +104,10 @@ BiModeBP::squash(ThreadID tid, void *bpHistory)
  */
 bool
 BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
-{
+{   
+    
+    num_prediction++;
+
     unsigned choiceHistoryIdx = ((branchAddr >> instShiftAmt)
                                 & choiceHistoryMask);
     unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
@@ -133,6 +141,8 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bpHistory)
     bpHistory = static_cast<void*>(history);
     updateGlobalHistReg(tid, finalPrediction);
 
+    write_acc();
+
     return finalPrediction;
 }
 
@@ -159,6 +169,7 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
     // We do not update the counters speculatively on a squash.
     // We just restore the global history register.
     if (squashed) {
+        num_prediction--;
         globalHistoryReg[tid] = (history->globalHistoryReg << 1) | taken;
         return;
     }
@@ -207,6 +218,7 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
             }
         }
     } else {
+	num_wrong_prediction++;
         // always update the choice predictor on an incorrect prediction
         if (taken) {
             choiceCounters[choiceHistoryIdx]++;
@@ -230,4 +242,11 @@ BiModeBP*
 BiModeBPParams::create()
 {
     return new BiModeBP(this);
+}
+
+void BiModeBP::write_acc(){
+  std::ofstream out("./pred_acc_bimode.txt");
+  out<<"Pred: "<<num_prediction;
+  out<<"fail: "<<num_wrong_prediction;
+  out<<std::endl;
 }

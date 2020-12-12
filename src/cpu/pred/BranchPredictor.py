@@ -95,9 +95,9 @@ class BiModeBP(BranchPredictor):
     cxx_class = 'BiModeBP'
     cxx_header = "cpu/pred/bi_mode.hh"
 
-    globalPredictorSize = Param.Unsigned(8192, "Size of global predictor")
+    globalPredictorSize = Param.Unsigned(1024, "Size of global predictor")
     globalCtrBits = Param.Unsigned(2, "Bits per counter")
-    choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
+    choicePredictorSize = Param.Unsigned(1024, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
 class TAGEBase(SimObject):
